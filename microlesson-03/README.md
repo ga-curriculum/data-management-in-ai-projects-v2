@@ -7,9 +7,10 @@
 
 By the end of this lesson, learners will be able to:
 
-- Differentiate between Data Warehouses, Data Lakes, and Data Mesh.
+- Differentiate between Data Warehouses, Data Lakes, Data Mesh, and Vector Databases.
 - Apply a decision-making framework to choose the right data repository for a given use case.
 - Implement hands-on coding exercises to compare data storage formats and simulate federated queries in a Data Mesh architecture.
+- Explain how vector databases power RAG pipelines and agent memory in modern AI systems.
 
 ## **What is a Data Repository?**
 
@@ -21,11 +22,12 @@ A **data repository** is a storage system where data is collected, stored, and m
 
 ### **Types of Data Repositories**
 
-| Repository Type    | Characteristics                                      | Best For                                           |
-| ------------------ | ---------------------------------------------------- | -------------------------------------------------- |
-| **Data Warehouse** | Structured, analytics-focused, schema-on-write       | Business Intelligence, Historical Reporting        |
-| **Data Lake**      | Raw, unstructured/semi-structured, schema-on-read    | AI, Machine Learning, Real-time Processing         |
-| **Data Mesh**      | Decentralized, domain-driven, federated architecture | Large organizations managing multiple data sources |
+| Repository Type      | Characteristics                                      | Best For                                           |
+| -------------------- | ---------------------------------------------------- | -------------------------------------------------- |
+| **Data Warehouse**   | Structured, analytics-focused, schema-on-write       | Business Intelligence, Historical Reporting        |
+| **Data Lake**        | Raw, unstructured/semi-structured, schema-on-read    | AI, Machine Learning, Real-time Processing         |
+| **Data Mesh**        | Decentralized, domain-driven, federated architecture | Large organizations managing multiple data sources |
+| **Vector Database**  | Embedding-indexed, similarity-search optimized       | RAG pipelines, semantic search, agent memory       |
 
 ## **Decision-Making Framework: How to Choose?**
 
@@ -163,10 +165,87 @@ Discuss in teams:
 - What trade-offs does the company face in **speed, scalability, and data management?**
 - How would you advise the client on **cost-effective and scalable storage solutions?**
 
+## **Extending the Framework: Vector Databases for RAG and Agentic AI**
+
+The three repository types above cover most traditional data management needs — but modern AI systems introduce a fourth storage pattern that doesn't fit neatly into any of them: **vector databases**.
+
+### **Why a New Repository Type?**
+
+Traditional repositories are optimized for **exact lookups** (warehouse), **raw file storage** (lake), or **federated access** (mesh). None of them are designed for the core operation that powers modern AI: **semantic similarity search** — finding the most relevant content based on meaning, not keyword matching.
+
+| Repository Type      | Query Type                   | AI Use Case                            |
+| -------------------- | ---------------------------- | -------------------------------------- |
+| **Data Warehouse**   | Exact SQL queries            | Reporting, BI dashboards               |
+| **Data Lake**        | File-based batch retrieval   | Model training, feature engineering   |
+| **Data Mesh**        | Federated domain queries     | Cross-team analytics                  |
+| **Vector Database**  | Semantic similarity search   | RAG pipelines, agent memory, search   |
+
+### **How RAG Uses a Vector Database**
+
+**Retrieval-Augmented Generation (RAG)** is a technique where an AI model retrieves relevant context from a knowledge store before generating a response. This allows LLMs to answer questions grounded in your organization's private data — without retraining the model.
+
+<div class="mermaid">
+graph LR;
+    A[Source Documents] -->|Chunk| B[Text Chunks];
+    B -->|Embed| C[Embedding Model];
+    C -->|Store| D[(Vector Database)];
+    E[User Query] -->|Embed| F[Query Vector];
+    F -->|Similarity Search| D;
+    D -->|Top-K Chunks| G[LLM Prompt];
+    G -->|Generate| H[Grounded Response];
+</div>
+
+**The pipeline in plain language:**
+1. **Ingest** source documents (PDFs, internal wikis, support tickets)
+2. **Chunk** them into smaller passages
+3. **Embed** each chunk using a model that converts text into a numeric vector
+4. **Store** those vectors in a vector database (FAISS, Pinecone, Weaviate, Chroma)
+5. At query time: **embed the user's question**, **search for the nearest vectors**, retrieve the top matching chunks, and pass them as context to the LLM
+
+### **How AI Agents Use Vector Databases as Memory**
+
+In agentic workflows (covered in Day 5), AI agents need to persist and retrieve context across multiple steps or sessions. A vector database acts as **long-term memory** for the agent — storing past interactions, tool results, and domain knowledge that can be retrieved semantically when relevant.
+
+This connects directly to **MCP (Model Context Protocol)**, where an MCP server can expose a vector store as a **Resource** — allowing any MCP-compatible agent to query organizational knowledge through a standardized interface.
+
+### **Updated Decision Framework**
+
+<div class="mermaid">
+graph TD;
+    A[What type of data do you have?] -->|Structured| B[Use Data Warehouse];
+    A -->|Unstructured| C[Use Data Lake];
+    A -->|Need Semantic Search or AI Retrieval?| V[Use Vector Database];
+    B -->|Need Real-Time Access?| D[Consider a Hybrid Approach];
+    C -->|Multiple Business Domains?| E[Use Data Mesh];
+    D -->|Yes| F[Optimize for Low-Latency Queries];
+    D -->|No| G[Batch Processing with Warehousing];
+    V -->|RAG Pipeline?| R[Embed + Retrieve for LLM Context];
+    V -->|Agent Memory?| M[Persist + Retrieve Agent State];
+</div>
+
+### **Vector Database Tooling Comparison**
+
+| Tool          | Type              | Best For                                      | Notes                                      |
+| ------------- | ----------------- | --------------------------------------------- | ------------------------------------------ |
+| **FAISS**     | Open-source, local | Fast local search, prototyping               | Facebook AI; in-process, no server needed  |
+| **Chroma**    | Open-source, local | Development, lightweight RAG                 | Easy Python API; good for notebooks        |
+| **Weaviate**  | Open-source, cloud | Hybrid keyword + vector search               | Built-in schema and REST/GraphQL API       |
+| **Pinecone**  | Managed cloud      | Production-scale RAG, enterprise deployments | Fully managed; simplest ops overhead       |
+
+### **Key considerations when working with clients:**
+
+- Does the client's AI use case require **semantic retrieval** over proprietary documents or knowledge bases? If yes, a vector database belongs in the architecture.
+- For **RAG implementations**, plan for the full pipeline: document ingestion, chunking strategy, embedding model choice, and index refresh cadence.
+- For **agentic systems**, consider whether agent memory needs to persist across sessions and how it will be accessed — a vector store paired with an MCP server gives agents a standardized, queryable memory layer.
+- Vector databases are **not a replacement** for warehouses or lakes — they complement them. Production systems often use all four repository types serving different parts of the pipeline.
+
+---
+
 ## **Recap & Takeaways**
 
 ✅ **Data Warehouses** excel at structured data and analytics-heavy use cases.\
 ✅ **Data Lakes** support unstructured data efficiently, making them ideal for AI & ML applications.\
 ✅ **Data Mesh** is best for decentralized, multi-domain enterprise data architectures.\
+✅ **Vector Databases** enable semantic search and are the backbone of RAG pipelines and agent memory in modern AI systems.\
 ✅ Selecting the right repository depends on **business goals, scalability needs, and governance models.**
 
